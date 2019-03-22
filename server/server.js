@@ -57,9 +57,7 @@ server.post('/api/grades', (request, response) => {
 
 	//"joe dei rossi"   ['joe','dei','rossi'] -> ['dei','rossi'] -> 'dei rossi'
 	db.connect( ()=>{
-
 		const name = request.body.name.split(" ");
-
 		const query = 'INSERT INTO `grades` SET `surname`="'+name.slice(1).join(' ')+'", `givenname`="'+name[0]+'", `course`="'+request.body.course+'", `grade`='+request.body.grade+', `added`=NOW()';
 		db.query( query, (error, result)=>{
 			if(!error){
@@ -74,6 +72,32 @@ server.post('/api/grades', (request, response) => {
 				})
 			}
 		})	
+	})
+})
+
+server.delete('/api/grades/:student_id', (request, response )=>{
+	console.log(request.params);
+	if(request.params.student_id === undefined){
+		response.send( {
+			success: false,
+			error: 'must provide a student id for delete'
+		});
+		return;
+	}
+	db.connect( ()=>{
+		const query = "DELETE FROM `grades` WHERE `id`= " + request.params.student_id;
+		db.query(query, (error, result)=>{
+			if(!error){
+				response.send({
+					success: true
+				})
+			} else {
+				response.send({
+					success: false,
+					error
+				})
+			}
+		})
 	})
 })
 
