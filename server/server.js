@@ -9,6 +9,7 @@ const server = express();
 
 server.use( express.static( __dirname + '/html' ) );
 server.use( express.urlencoded({ extended: false }) ); //have express pull body data that is urlencoded and place it into an object called "body"
+server.use( express.json() ) // used for things like axios 
 
 //make an endpoint to handle retrieving the grades of all students
 server.get('/api/grades', (req, res) => {
@@ -39,8 +40,41 @@ server.get('/api/grades', (req, res) => {
 	} )
 })
 
-server.post('/api/grades', (request, response) => {
 
+
+server.post('/api/grades', (request, response) => {
+	//check the body object and see if any data was not sent
+	if(request.body.name===undefined || request.body.course===undefined || request.body.grade===undefined){
+		//respond to the client with an appropriate error message
+		response.send({
+			success: false,
+			error: 'invalid name, course, or grade'
+		});
+
+		return;
+	}
+	//connect to the database
+
+	//"joe dei rossi"   ['joe','dei','rossi'] -> ['dei','rossi'] -> 'dei rossi'
+	db.connect( ()=>{
+
+		const name = request.body.name.split(" ");
+
+		const query = 'INSERT INTO `grades` SET `surname`="'+name.slice(1).join(' ')+'", `givenname`="'+name[0]+'", `course`="'+request.body.course+'", `grade`='+request.body.grade+', `added`=NOW()';
+		db.query( query, (error, result)=>{
+			if(!error){
+				response.send({
+					success: true,
+					new_id: result.insertId
+				})
+			} else {
+				response.send({
+					success: false,
+					error
+				})
+			}
+		})	
+	})
 })
 
 server.listen(3001, ()=>{
